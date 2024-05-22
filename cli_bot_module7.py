@@ -2,7 +2,6 @@ import re
 from datetime import datetime, date, timedelta
 from collections import UserDict
 
-
 def input_error(func):
     def wrapper(*args, **kwargs):
         try:
@@ -13,18 +12,14 @@ def input_error(func):
             return str(e)
         except IndexError:
             return "Insufficient arguments provided."
-
     return wrapper
-
 
 class Field:
     def __init__(self, value):
         self.value = value
 
-
 class Name(Field):
     pass
-
 
 class Phone(Field):
     def __init__(self, number):
@@ -35,7 +30,6 @@ class Phone(Field):
     @staticmethod
     def validate(number):
         return bool(re.match(r'^\d{10}$', number))
-
 
 class Birthday(Field):
     def __init__(self, value):
@@ -50,7 +44,6 @@ class Birthday(Field):
             return True
         except ValueError:
             return False
-
 
 class Record:
     def __init__(self, name):
@@ -108,7 +101,6 @@ class Record:
         birthday_str = self.birthday.value.strftime("%d.%m.%Y") if self.birthday else "No birthday set"
         return f"Record(name: {self.name.value}, phones: [{phones_str}], birthday: {birthday_str})"
 
-
 class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
@@ -138,114 +130,99 @@ class AddressBook(UserDict):
                     birthday_this_year = adjust_for_weekend(birthday_this_year)
 
                     congratulation_date_str = date_to_string(birthday_this_year)
-                    upcoming_birthdays.append(
-                        {"name": record.name.value, "congratulation_date": congratulation_date_str})
+                    upcoming_birthdays.append({"name": record.name.value, "congratulation_date": congratulation_date_str})
         return upcoming_birthdays
 
-    def adjust_for_weekend(birthday):
-        if birthday.weekday() == 5:  # Saturday
-            birthday += timedelta(days=2)
-        elif birthday.weekday() == 6:  # Sunday
-            birthday += timedelta(days=1)
-        return birthday
+def adjust_for_weekend(birthday):
+    if birthday.weekday() == 5:  # Saturday
+        birthday += timedelta(days=2)
+    elif birthday.weekday() == 6:  # Sunday
+        birthday += timedelta(days=1)
+    return birthday
 
-    def date_to_string(birthday):
-        return birthday.strftime("%d.%m.%Y")
+def date_to_string(birthday):
+    return birthday.strftime("%d.%m.%Y")
 
-    @input_error
-    def add_birthday(args, book):
-        name, birthday = args.split(maxsplit=1)
-        record = book.find(name)
-        if record:
-            return record.add_birthday(birthday)
-        else:
-            return "Record not found."
+@input_error
+def add_birthday(args, book):
+    name, birthday = args.split(maxsplit=1)
+    record = book.find(name)
+    if record:
+        return record.add_birthday(birthday)
+    else:
+        return "Record not found."
 
-    @input_error
-    def show_birthday(args, book):
-        name = args.strip()
-        record = book.find(name)
-        if record:
-            return f"{name}'s birthday is {record.show_birthday()}."
-        else:
-            return "Record not found."
+@input_error
+def show_birthday(args, book):
+    name = args.strip()
+    record = book.find(name)
+    if record:
+        return f"{name}'s birthday is {record.show_birthday()}."
+    else:
+        return "Record not found."
 
-    @input_error
-    def birthdays(args, book):
-        days = int(args.strip()) if args.strip().isdigit() else 7
-        upcoming_birthdays = book.get_upcoming_birthdays(days)
-        if not upcoming_birthdays:
-            return "No upcoming birthdays."
-        result = "Upcoming birthdays:\n"
-        for birthday in upcoming_birthdays:
-            result += f"{birthday['name']}: {birthday['congratulation_date']}\n"
-        return result.strip()
+@input_error
+def birthdays(args, book):
+    days = int(args.strip()) if args.strip().isdigit() else 7
+    upcoming_birthdays = book.get_upcoming_birthdays(days)
+    if not upcoming_birthdays:
+        return "No upcoming birthdays."
+    result = "Upcoming birthdays:\n"
+    for birthday in upcoming_birthdays:
+        result += f"{birthday['name']}: {birthday['congratulation_date']}\n"
+    return result.strip()
 
-    @input_error
-    def add_contact(args, book):
-        name, phone = args.split(maxsplit=1)
-        record = book.find(name)
-        if record:
-            return record.add_phone(phone)
-        else:
-            new_record = Record(name)
-            new_record.add_phone(phone)
-            book.add_record(new_record)
-            return f"New contact '{name}' added with phone number '{phone}'."
+@input_error
+def add_contact(args, book):
+    name, phone = args.split(maxsplit=1)
+    record = book.find(name)
+    if record:
+        return record.add_phone(phone)
+    else:
+        new_record = Record(name)
+        new_record.add_phone(phone)
+        book.add_record(new_record)
+        return f"New contact '{name}' added with phone number '{phone}'."
 
-    @input_error
-    def change_phone(args, book):
-        name, phone = args.split(maxsplit=1)
-        record = book.find(name)
-        if record:
-            old_phone = record.phones[0].value if record.phones else None
-            return record.edit_phone(old_phone, phone)
-        else:
-            return "Record not found."
+@input_error
+def change_phone(args, book):
+    name, phone = args.split(maxsplit=1)
+    record = book.find(name)
+    if record:
+        old_phone = record.phones[0].value if record.phones else None
+        return record.edit_phone(old_phone, phone)
+    else:
+        return "Record not found."
 
-    @input_error
-    def show_phone(args, book):
-        name = args.strip()
-        record = book.find(name)
-        if record:
-            phones = ', '.join(phone.value for phone in record.phones)
-            return f"{name}'s phone number(s): {phones}"
-        else:
-            return "Record not found."
+@input_error
+def show_phone(args, book):
+    name = args.strip()
+    record = book.find(name)
+    if record:
+        phones = ', '.join(phone.value for phone in record.phones)
+        return f"{name}'s phone number(s): {phones}"
+    else:
+        return "Record not found."
 
-    def show_all_contacts(book):
-        if not book.data:
-            return "No contacts in address book."
-        result = "All contacts:\n"
-        for name, record in book.data.items():
-            result += f"{name}: {', '.join(phone.value for phone in record.phones)}\n"
-        return result.strip()
+def show_all_contacts(book):
+    if not book.data:
+        return "No contacts in address book."
+    result = "All contacts:\n"
+    for name, record in book.data.items():
+        result += f"{name}: {', '.join(phone.value for phone in record.phones)}\n"
+    return result.strip()
 
-    def greet(self):
-        return "Hello! How can I assist you today?"
+def greet():
+    return "Hello! How can I assist you today?"
 
-    def close_program(self):
-        return "Goodbye!"
+def close_program():
+    return "Goodbye!"
 
-    COMMANDS = {
-        "add": add_contact,
-        "change": change_phone,
-        "phone": show_phone,
-        "all": show_all_contacts,
-        "add-birthday": add_birthday,
-        "show-birthday": show_birthday,
-        "birthdays": birthdays,
-        "hello": greet,
-        "close": close_program,
-        "exit": close_program,
-    }
-
-    def parse_input(user_input):
-        parts = user_input.split(' ', 1)
-        command = parts[0].lower()
-        args = parts[1] if len(parts) > 1 else ''
-        return command, args
-
+def parse_input(user_input):
+    parts = user_input.split(' ', 1)
+    command = parts[0].lower()
+    args = parts[1] if len(parts) > 1 else ''
+    return command, args
 
 def main():
     book = AddressBook()
@@ -284,3 +261,6 @@ def main():
 
         else:
             print("Invalid command.")
+
+if __name__ == "__main__":
+    main()
